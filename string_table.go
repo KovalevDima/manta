@@ -3,6 +3,7 @@ package manta
 import (
 	"github.com/dotabuff/manta/dota"
 	"github.com/golang/snappy"
+	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -294,3 +295,89 @@ func parseStringTable(buf []byte, numUpdates int32, name string, userDataFixed b
 
 	return items
 }
+
+// ------------------------------------------------------------------------- //
+// Modifier
+// ------------------------------------------------------------------------- //
+
+type ModifierTableEntryHandler func(msg *dota.CDOTAModifierBuffTableEntry) error
+
+// OnModifierTableEntry registers a handler for when a ModifierBuffTableEntry
+// is created or updated.
+func (p *Parser) OnModifierTableEntry(fn ModifierTableEntryHandler) {
+	p.modifierTableEntryHandlers = append(p.modifierTableEntryHandlers, fn)
+}
+
+// emitModifierTableEvents emits ModifierBuffTableEntry events
+// from the given string table items.
+func (p *Parser) emitModifierTableEvents(items []*stringTableItem) error {
+	for _, item := range items {
+		msg := &dota.CDOTAModifierBuffTableEntry{}
+		if err := proto.NewBuffer(item.Value).Unmarshal(msg); err != nil {
+			_debugf("unable to unmarshal ModifierBuffTableEntry: %s", err)
+			continue
+		}
+
+		for _, fn := range p.modifierTableEntryHandlers {
+			if err := fn(msg); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// ------------------------------------------------------------------------- //
+// lzss
+// ------------------------------------------------------------------------- //
+
+// Decompress a Valve LZSS compressed buffer
+func unlzss(buf []byte) ([]byte, error) {
+	r := newReader(buf)
+
+	if s := r.readStringN(4); s != "LZSS" {
+		return nil, _errorf("expected LZSS header, got %s", s)
+	}
+
+	size := int(r.readLeUint32())
+	out := make([]byte, 0)
+
+	var cmdByte, getCmdByte byte
+
+	for {
+		if getCmdByte == 0 {
+			cmdByte = r.readByte()
+		}
+
+		getCmdByte = (getCmdByte + 1) & 0x07
+
+		if (cmdByte & 0x01) != 0 {
+			a := r.readByte()
+			b := r.readByte()
+
+			position := (int(a) << 4) | (int(b) >> 4)
+			count := int((b & 0x0F) + 1)
+			if count == 1 {
+				break
+			}
+			source := len(out) - int(position) - 1
+			for i := 0; i < count; i++ {
+				out = append(out, out[source+i])
+			}
+		} else {
+			out = append(out, r.readByte())
+		}
+		cmdByte = cmdByte >> 1
+	}
+
+	if len(out) != size {
+		return nil, _errorf("expected %d bytes, got %d", size, len(out))
+	}
+
+	return out, nil
+}
+
+// ------------------------------------------------------------------------- //
+// 
+// ------------------------------------------------------------------------- //

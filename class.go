@@ -102,3 +102,16 @@ func (p *Parser) updateInstanceBaseline() {
 		p.classBaselines[classId] = item.Value
 	}
 }
+
+// Convert a string to an int32
+func atoi32(s string) (int32, error) {
+	n, err := strconv.ParseInt(s, 0, 32)
+	if err != nil {
+		return 0, err
+	}
+	return int32(n), nil
+}
+
+// ------------------------------------------------------------------------- //
+// 
+// ------------------------------------------------------------------------- //

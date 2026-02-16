@@ -2,8 +2,12 @@ package manta
 
 import (
 	"fmt"
+	"strings"
+	"runtime"
+	"reflect"
 
 	"github.com/dotabuff/manta/dota"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // EntityOp is a bitmask representing the type of operation performed on an Entity
@@ -88,6 +92,12 @@ func (e *Entity) Map() map[string]interface{} {
 // Dump prints the current entity state to standard output
 func (e *Entity) Dump() {
 	_dump(e.String(), e.Map())
+}
+
+// dump named object
+func _dump(label string, args ...interface{}) {
+	fmt.Printf("%s: %s", _caller(2), label)
+	spew.Dump(args...)
 }
 
 // Get returns the current value of the Entity state for the given key
@@ -319,3 +329,119 @@ func (p *Parser) onCSVCMsg_PacketEntities(m *dota.CSVCMsg_PacketEntities) error 
 func (p *Parser) OnEntity(h EntityHandler) {
 	p.entityHandlers = append(p.entityHandlers, h)
 }
+
+// ------------------------------------------------------------------------- //
+// Field state
+// ------------------------------------------------------------------------- //
+
+type fieldState struct {
+	state []interface{}
+}
+
+func newFieldState() *fieldState {
+	return &fieldState{
+		state: make([]interface{}, 8),
+	}
+}
+
+func (s *fieldState) get(fp *fieldPath) interface{} {
+	x := s
+	z := 0
+	for i := 0; i <= fp.last; i++ {
+		z = fp.path[i]
+		if len(x.state) < z+2 {
+			return nil
+		}
+		if i == fp.last {
+			return x.state[z]
+		}
+		if _, ok := x.state[z].(*fieldState); !ok {
+			return nil
+		}
+		x = x.state[z].(*fieldState)
+	}
+	return nil
+}
+
+func (s *fieldState) set(fp *fieldPath, v interface{}) {
+	x := s
+	z := 0
+	for i := 0; i <= fp.last; i++ {
+		z = fp.path[i]
+		if y := len(x.state); y < z+2 {
+			z := make([]interface{}, max(z+2, y*2))
+			copy(z, x.state)
+			x.state = z
+		}
+		if i == fp.last {
+			if _, ok := x.state[z].(*fieldState); !ok {
+				x.state[z] = v
+			}
+			return
+		}
+		if _, ok := x.state[z].(*fieldState); !ok {
+			x.state[z] = newFieldState()
+		}
+		x = x.state[z].(*fieldState)
+	}
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// ------------------------------------------------------------------------- //
+// Fields reader
+// ------------------------------------------------------------------------- //
+
+func readFields(r *reader, s *serializer, state *fieldState) {
+	fps := readFieldPaths(r)
+
+	for _, fp := range fps {
+		decoder := s.getDecoderForFieldPath(fp, 0)
+
+		if v(6) {
+			name := strings.Join(s.getNameForFieldPath(fp, 0), ".")
+			typ := s.getTypeForFieldPath(fp, 0)
+			field := s.getFieldForFieldPath(fp, 0)
+			_debugf("NEW reading ser=%s path=%s pos=%s name=%s type=%s decoder=%s model=%s", s.name, fp.String(), r.position(), name, typ, _nameof(decoder), field.modelString())
+		}
+
+		val := decoder(r)
+		state.set(fp, val)
+
+		if v(6) {
+			name := strings.Join(s.getNameForFieldPath(fp, 0), ".")
+			fp2 := newFieldPath()
+			b := s.getFieldPathForName(fp2, name)
+
+			if !b {
+				_panicf("GOT NO FP: name=%s fp2=%#vv", name, fp2)
+			}
+
+			if fp2.String() != fp.String() {
+				_panicf("GOT FP MISMATCH: fp=%s fp2=%s", fp, fp2)
+			}
+
+			fp2.release()
+
+			_debugf(" => %#v", val)
+		}
+
+		fp.release()
+	}
+}
+
+func _nameof(i interface{}) string {
+	ss := strings.Split(strings.Replace(runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name(), ".", "/", -1), "/")
+	return ss[len(ss)-1]
+}
+
+// ------------------------------------------------------------------------- //
+// 
+// ------------------------------------------------------------------------- //
+
+
