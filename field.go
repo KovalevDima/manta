@@ -29,29 +29,11 @@ type field struct {
 	highValue         *float32
 	fieldType         *fieldType
 	serializer        *serializer
-	value             interface{}
 	model             int
 
 	decoder      fieldDecoder
 	baseDecoder  fieldDecoder
 	childDecoder fieldDecoder
-}
-
-func (f *field) modelString() string {
-	switch f.model {
-	case fieldModelFixedArray:
-		return "fixed-array"
-	case fieldModelFixedTable:
-		return "fixed-table"
-	case fieldModelVariableArray:
-		return "variable-array"
-	case fieldModelVariableTable:
-		return "variable-table"
-	case fieldModelSimple:
-		return "simple"
-	default:
-		return "other"
-	}
 }
 
 func newField(ser *dota.CSVCMsg_FlattenedSerializer, f *dota.ProtoFlattenedSerializerFieldT) *field {
