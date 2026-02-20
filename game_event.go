@@ -1,9 +1,6 @@
 package manta
 
 import (
-	"bytes"
-	"fmt"
-
 	"github.com/dotabuff/manta/dota"
 )
 
@@ -39,36 +36,6 @@ func (ge *GameEvent) TypeName() string {
 
 func (ge *GameEvent) Type() dota.DOTA_COMBATLOG_TYPES {
 	return dota.DOTA_COMBATLOG_TYPES(ge.m.GetKeys()[0].GetValByte())
-}
-
-func (ge *GameEvent) String() string {
-	keys := ge.m.GetKeys()
-	name := dota.DOTA_COMBATLOG_TYPES_name[keys[0].GetValByte()]
-	buf := bytes.NewBufferString("\n  " + name + "\n")
-
-	for name, field := range ge.t.fields {
-		key := keys[field.i]
-		switch key.GetType() {
-		case gameEventTypeString:
-			fmt.Fprintf(buf, "    %s: %s\n", name, key.GetValString())
-		case gameEventTypeFloat:
-			fmt.Fprintf(buf, "    %s: %f\n", name, key.GetValFloat())
-		case gameEventTypeLong:
-			fmt.Fprintf(buf, "    %s: %d\n", name, key.GetValLong())
-		case gameEventTypeShort:
-			fmt.Fprintf(buf, "    %s: %d\n", name, key.GetValShort())
-		case gameEventTypeByte:
-			fmt.Fprintf(buf, "    %s: %d\n", name, key.GetValByte())
-		case gameEventTypeBool:
-			fmt.Fprintf(buf, "    %s: %t\n", name, key.GetValBool())
-		case gameEventTypeUint64:
-			fmt.Fprintf(buf, "    %s: %d\n", name, key.GetValUint64())
-		default:
-			_panicf("Unknown type: %s - %d", name, field.i)
-		}
-	}
-
-	return buf.String()
 }
 
 // Gets the string value of a named field.

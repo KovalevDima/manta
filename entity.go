@@ -43,10 +43,6 @@ func (o EntityOp) Flag(p EntityOp) bool {
 	return o&p != 0
 }
 
-// String returns a human identifiable string for the EntityOp
-func (o EntityOp) String() string {
-	return entityOpNames[o]
-}
 
 // EntityHandler is a function that receives Entity updates
 type EntityHandler func(*Entity, EntityOp) error
