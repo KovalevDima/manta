@@ -173,21 +173,6 @@ func (p *Parser) afterStop() {
 	}
 }
 
-// Performs a lookup on a string table by an entry index.
-func (p *Parser) LookupStringByIndex(table string, index int32) (string, bool) {
-	t, ok := p.stringTables.GetTableByName(table)
-	if !ok {
-		return "", false
-	}
-
-	item, ok := t.Items[index]
-	if !ok {
-		return "", false
-	}
-
-	return item.Key, true
-}
-
 // Describes a demo message parsed from the replay.
 type outerMessage struct {
 	tick   uint32
@@ -373,14 +358,6 @@ type class struct {
 
 func (c *class) getNameForFieldPath(fp *fieldPath) string {
 	return strings.Join(c.serializer.getNameForFieldPath(fp, 0), ".")
-}
-
-func (c *class) getTypeForFieldPath(fp *fieldPath) *fieldType {
-	return c.serializer.getTypeForFieldPath(fp, 0)
-}
-
-func (c *class) getDecoderForFieldPath(fp *fieldPath) fieldDecoder {
-	return c.serializer.getDecoderForFieldPath(fp, 0)
 }
 
 func (c *class) getFieldPathForName(fp *fieldPath, name string) bool {
