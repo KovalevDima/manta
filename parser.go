@@ -364,10 +364,6 @@ func (c *class) getFieldPathForName(fp *fieldPath, name string) bool {
 	return c.serializer.getFieldPathForName(fp, name)
 }
 
-func (c *class) getFieldPaths(fp *fieldPath, state *fieldState) []*fieldPath {
-	return c.serializer.getFieldPaths(fp, state)
-}
-
 // Internal callback for OnCSVCMsg_ServerInfo.
 func (p *Parser) onCSVCMsg_ServerInfo(m *dota.CSVCMsg_ServerInfo) error {
 	// This may be needed to parse PacketEntities.
