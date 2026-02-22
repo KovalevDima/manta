@@ -8,7 +8,6 @@ import (
 	"math"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/dotabuff/manta/dota"
 	"github.com/golang/snappy"
@@ -354,14 +353,6 @@ type class struct {
 	classId    int32
 	name       string
 	serializer *serializer
-}
-
-func (c *class) getNameForFieldPath(fp *fieldPath) string {
-	return strings.Join(c.serializer.getNameForFieldPath(fp, 0), ".")
-}
-
-func (c *class) getFieldPathForName(fp *fieldPath, name string) bool {
-	return c.serializer.getFieldPathForName(fp, name)
 }
 
 // Internal callback for OnCSVCMsg_ServerInfo.
