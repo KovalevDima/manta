@@ -118,7 +118,7 @@ func (p *Parser) onCDemoSendTables(m *dota.CDemoSendTables) error {
 
 	return nil
 }
-}
+
 
 // ------------------------------------------------------------------------- //
 // field
@@ -483,6 +483,7 @@ func (p *fieldPatch) shouldApply(build uint32) bool {
 	}
 
 	return build >= p.minBuild && build <= p.maxBuild
+}
 
 // ------------------------------------------------------------------------- //
 // field_decoder
