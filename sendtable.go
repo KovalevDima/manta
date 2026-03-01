@@ -208,28 +208,6 @@ func (f *field) setModel(model int) {
 	}
 }
 
-func (f *field) getFieldForFieldPath(fp *fieldPath, pos int) *field {
-	switch f.model {
-	case fieldModelFixedArray:
-		return f
-
-	case fieldModelFixedTable:
-		if fp.last != pos-1 {
-			return f.serializer.getFieldForFieldPath(fp, pos)
-		}
-
-	case fieldModelVariableArray:
-		return f
-
-	case fieldModelVariableTable:
-		if fp.last >= pos+1 {
-			return f.serializer.getFieldForFieldPath(fp, pos+1)
-		}
-	}
-
-	return f
-}
-
 func (f *field) getNameForFieldPath(fp *fieldPath, pos int) []string {
 	x := []string{f.varName}
 
@@ -259,30 +237,6 @@ func (f *field) getNameForFieldPath(fp *fieldPath, pos int) []string {
 	}
 
 	return x
-}
-
-func (f *field) getTypeForFieldPath(fp *fieldPath, pos int) *fieldType {
-	switch f.model {
-	case fieldModelFixedArray:
-		return f.fieldType
-
-	case fieldModelFixedTable:
-		if fp.last != pos-1 {
-			return f.serializer.getTypeForFieldPath(fp, pos)
-		}
-
-	case fieldModelVariableArray:
-		if fp.last == pos {
-			return f.fieldType.genericType
-		}
-
-	case fieldModelVariableTable:
-		if fp.last >= pos+1 {
-			return f.serializer.getTypeForFieldPath(fp, pos+1)
-		}
-	}
-
-	return f.fieldType
 }
 
 func (f *field) getDecoderForFieldPath(fp *fieldPath, pos int) fieldDecoder {
@@ -371,16 +325,9 @@ type serializer struct {
 	fields  []*field
 }
 
-func (s *serializer) id() string {
-	return serializerId(s.name, s.version)
-}
 
 func (s *serializer) getNameForFieldPath(fp *fieldPath, pos int) []string {
 	return s.fields[fp.path[pos]].getNameForFieldPath(fp, pos+1)
-}
-
-func (s *serializer) getTypeForFieldPath(fp *fieldPath, pos int) *fieldType {
-	return s.fields[fp.path[pos]].getTypeForFieldPath(fp, pos+1)
 }
 
 func (s *serializer) getDecoderForFieldPath(fp *fieldPath, pos int) fieldDecoder {
@@ -389,10 +336,6 @@ func (s *serializer) getDecoderForFieldPath(fp *fieldPath, pos int) fieldDecoder
 		_panicf("serializer %s: field path %s has no field (%d)", s.name, fp, index)
 	}
 	return s.fields[index].getDecoderForFieldPath(fp, pos+1)
-}
-
-func (s *serializer) getFieldForFieldPath(fp *fieldPath, pos int) *field {
-	return s.fields[fp.path[pos]].getFieldForFieldPath(fp, pos+1)
 }
 
 func (s *serializer) getFieldPathForName(fp *fieldPath, name string) bool {
@@ -412,9 +355,6 @@ func (s *serializer) getFieldPathForName(fp *fieldPath, name string) bool {
 	return false
 }
 
-func serializerId(name string, version int32) string {
-	return fmt.Sprintf("%s(%d)", name, version)
-}
 
 // ------------------------------------------------------------------------- //
 // field_type
