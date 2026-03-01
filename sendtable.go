@@ -28,11 +28,6 @@ var pointerTypes = map[string]bool{
 	"CDOTAGameRules":             true,
 }
 
-var itemCounts = map[string]int{
-	"MAX_ITEM_STOCKS":             8,
-	"MAX_ABILITY_DRAFT_ABILITIES": 48,
-}
-
 // Internal callback for OnCDemoSendTables.
 func (p *Parser) onCDemoSendTables(m *dota.CDemoSendTables) error {
 	r := newReader(m.GetData())
@@ -208,7 +203,7 @@ func (f *field) setModel(model int) {
 	}
 }
 
-func (f *field) getNameForFieldPath(fp *fieldPath, pos int) []string {
+func (f *field) getNameForFieldPathField(fp *fieldPath, pos int) []string {
 	x := []string{f.varName}
 
 	switch f.model {
@@ -219,7 +214,7 @@ func (f *field) getNameForFieldPath(fp *fieldPath, pos int) []string {
 
 	case fieldModelFixedTable:
 		if fp.last >= pos {
-			x = append(x, f.serializer.getNameForFieldPath(fp, pos)...)
+			x = append(x, f.serializer.getNameForFieldPathSer(fp, pos)...)
 		}
 
 	case fieldModelVariableArray:
@@ -231,7 +226,7 @@ func (f *field) getNameForFieldPath(fp *fieldPath, pos int) []string {
 		if fp.last != pos-1 {
 			x = append(x, fmt.Sprintf("%04d", fp.path[pos]))
 			if fp.last != pos {
-				x = append(x, f.serializer.getNameForFieldPath(fp, pos+1)...)
+				x = append(x, f.serializer.getNameForFieldPathSer(fp, pos+1)...)
 			}
 		}
 	}
@@ -326,8 +321,8 @@ type serializer struct {
 }
 
 
-func (s *serializer) getNameForFieldPath(fp *fieldPath, pos int) []string {
-	return s.fields[fp.path[pos]].getNameForFieldPath(fp, pos+1)
+func (s *serializer) getNameForFieldPathSer(fp *fieldPath, pos int) []string {
+	return s.fields[fp.path[pos]].getNameForFieldPathField(fp, pos+1)
 }
 
 func (s *serializer) getDecoderForFieldPath(fp *fieldPath, pos int) fieldDecoder {
@@ -393,6 +388,11 @@ func newFieldType(name string) *fieldType {
 	}
 
 	return x
+}
+
+var itemCounts = map[string]int{
+	"MAX_ITEM_STOCKS":             8,
+	"MAX_ABILITY_DRAFT_ABILITIES": 48,
 }
 
 // ------------------------------------------------------------------------- //

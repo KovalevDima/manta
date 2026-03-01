@@ -246,7 +246,7 @@ func readFields(r *reader, s *serializer, state *fieldState) {
 		state.set(fp, val)
 
 		if v(6) {
-			name := strings.Join(s.getNameForFieldPath(fp, 0), ".")
+			name := strings.Join(s.getNameForFieldPathSer(fp, 0), ".")
 			fp2 := newFieldPath()
 			b := s.getFieldPathForName(fp2, name)
 
