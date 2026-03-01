@@ -234,7 +234,7 @@ func (f *field) getNameForFieldPathField(fp *fieldPath, pos int) []string {
 	return x
 }
 
-func (f *field) getDecoderForFieldPath(fp *fieldPath, pos int) fieldDecoder {
+func (f *field) getDecoderForFieldPathField(fp *fieldPath, pos int) fieldDecoder {
 	switch f.model {
 	case fieldModelFixedArray:
 		return f.decoder
@@ -243,7 +243,7 @@ func (f *field) getDecoderForFieldPath(fp *fieldPath, pos int) fieldDecoder {
 		if fp.last == pos-1 {
 			return f.baseDecoder
 		}
-		return f.serializer.getDecoderForFieldPath(fp, pos)
+		return f.serializer.getDecoderForFieldPathSer(fp, pos)
 
 	case fieldModelVariableArray:
 		if fp.last == pos {
@@ -253,7 +253,7 @@ func (f *field) getDecoderForFieldPath(fp *fieldPath, pos int) fieldDecoder {
 
 	case fieldModelVariableTable:
 		if fp.last >= pos+1 {
-			return f.serializer.getDecoderForFieldPath(fp, pos+1)
+			return f.serializer.getDecoderForFieldPathSer(fp, pos+1)
 		}
 		return f.baseDecoder
 	}
@@ -261,7 +261,7 @@ func (f *field) getDecoderForFieldPath(fp *fieldPath, pos int) fieldDecoder {
 	return f.decoder
 }
 
-func (f *field) getFieldPathForName(fp *fieldPath, name string) bool {
+func (f *field) getFieldPathForNameField(fp *fieldPath, name string) bool {
 	switch f.model {
 	case fieldModelFixedArray:
 		assertLen(name, 4)
@@ -269,7 +269,7 @@ func (f *field) getFieldPathForName(fp *fieldPath, name string) bool {
 		return true
 
 	case fieldModelFixedTable:
-		return f.serializer.getFieldPathForName(fp, name)
+		return f.serializer.getFieldPathForNameSer(fp, name)
 
 	case fieldModelVariableArray:
 		assertLen(name, 4)
@@ -280,7 +280,7 @@ func (f *field) getFieldPathForName(fp *fieldPath, name string) bool {
 		assertLenMin(name, 6)
 		fp.path[fp.last] = mustAtoi(name[:4])
 		fp.last++
-		return f.serializer.getFieldPathForName(fp, name[5:])
+		return f.serializer.getFieldPathForNameSer(fp, name[5:])
 
 	case fieldModelSimple:
 		_panicf("not supported")
@@ -325,15 +325,15 @@ func (s *serializer) getNameForFieldPathSer(fp *fieldPath, pos int) []string {
 	return s.fields[fp.path[pos]].getNameForFieldPathField(fp, pos+1)
 }
 
-func (s *serializer) getDecoderForFieldPath(fp *fieldPath, pos int) fieldDecoder {
+func (s *serializer) getDecoderForFieldPathSer(fp *fieldPath, pos int) fieldDecoder {
 	index := fp.path[pos]
 	if len(s.fields) <= index {
 		_panicf("serializer %s: field path %s has no field (%d)", s.name, fp, index)
 	}
-	return s.fields[index].getDecoderForFieldPath(fp, pos+1)
+	return s.fields[index].getDecoderForFieldPathField(fp, pos+1)
 }
 
-func (s *serializer) getFieldPathForName(fp *fieldPath, name string) bool {
+func (s *serializer) getFieldPathForNameSer(fp *fieldPath, name string) bool {
 	for i, f := range s.fields {
 		if name == f.varName {
 			fp.path[fp.last] = i
@@ -343,7 +343,7 @@ func (s *serializer) getFieldPathForName(fp *fieldPath, name string) bool {
 		if strings.HasPrefix(name, f.varName+".") {
 			fp.path[fp.last] = i
 			fp.last++
-			return f.getFieldPathForName(fp, name[len(f.varName)+1:])
+			return f.getFieldPathForNameField(fp, name[len(f.varName)+1:])
 		}
 	}
 

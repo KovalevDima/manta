@@ -240,7 +240,7 @@ func readFields(r *reader, s *serializer, state *fieldState) {
 	fps := readFieldPaths(r)
 
 	for _, fp := range fps {
-		decoder := s.getDecoderForFieldPath(fp, 0)
+		decoder := s.getDecoderForFieldPathSer(fp, 0)
 
 		val := decoder(r)
 		state.set(fp, val)
@@ -248,7 +248,7 @@ func readFields(r *reader, s *serializer, state *fieldState) {
 		if v(6) {
 			name := strings.Join(s.getNameForFieldPathSer(fp, 0), ".")
 			fp2 := newFieldPath()
-			b := s.getFieldPathForName(fp2, name)
+			b := s.getFieldPathForNameSer(fp2, name)
 
 			if !b {
 				_panicf("GOT NO FP: name=%s fp2=%#vv", name, fp2)
