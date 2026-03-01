@@ -21,25 +21,6 @@ const (
 	EntityOpDeletedLeft    EntityOp = EntityOpDeleted | EntityOpLeft
 )
 
-var entityOpNames = map[EntityOp]string{
-	EntityOpNone:           "None",
-	EntityOpCreated:        "Created",
-	EntityOpUpdated:        "Updated",
-	EntityOpDeleted:        "Deleted",
-	EntityOpEntered:        "Entered",
-	EntityOpLeft:           "Left",
-	EntityOpCreatedEntered: "Created+Entered",
-	EntityOpUpdatedEntered: "Updated+Entered",
-	EntityOpDeletedLeft:    "Deleted+Left",
-}
-
-// Flag determines whether an EntityOp includes another. This is primarily
-// offered to prevent bit flag errors in downstream clients.
-func (o EntityOp) Flag(p EntityOp) bool {
-	return o&p != 0
-}
-
-
 // EntityHandler is a function that receives Entity updates
 type EntityHandler func(*Entity, EntityOp) error
 
@@ -163,11 +144,6 @@ func (p *Parser) onCSVCMsg_PacketEntities(m *dota.CSVCMsg_PacketEntities) error 
 	return nil
 }
 
-// OnEntity registers an EntityHandler that will be called when an entity
-// is created, updated, deleted, etc.
-func (p *Parser) OnEntity(h EntityHandler) {
-	p.entityHandlers = append(p.entityHandlers, h)
-}
 
 // ------------------------------------------------------------------------- //
 // Field state
@@ -181,25 +157,6 @@ func newFieldState() *fieldState {
 	return &fieldState{
 		state: make([]interface{}, 8),
 	}
-}
-
-func (s *fieldState) get(fp *fieldPath) interface{} {
-	x := s
-	z := 0
-	for i := 0; i <= fp.last; i++ {
-		z = fp.path[i]
-		if len(x.state) < z+2 {
-			return nil
-		}
-		if i == fp.last {
-			return x.state[z]
-		}
-		if _, ok := x.state[z].(*fieldState); !ok {
-			return nil
-		}
-		x = x.state[z].(*fieldState)
-	}
-	return nil
 }
 
 func (s *fieldState) set(fp *fieldPath, v interface{}) {
