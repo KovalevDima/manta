@@ -21,9 +21,6 @@ const (
 	EntityOpDeletedLeft    EntityOp = EntityOpDeleted | EntityOpLeft
 )
 
-// EntityHandler is a function that receives Entity updates
-type EntityHandler func(*Entity, EntityOp) error
-
 // Entity represents a single game entity in the replay
 type Entity struct {
 	index   int32
@@ -31,8 +28,6 @@ type Entity struct {
 	class   *class
 	active  bool
 	state   *fieldState
-	fpCache map[string]*fieldPath
-	fpNoop  map[string]bool
 }
 
 // newEntity returns a new entity for the given index, serial and class
@@ -43,8 +38,6 @@ func newEntity(index, serial int32, class *class) *Entity {
 		class:   class,
 		active:  true,
 		state:   newFieldState(),
-		fpCache: make(map[string]*fieldPath),
-		fpNoop:  make(map[string]bool),
 	}
 }
 
@@ -133,6 +126,7 @@ func (p *Parser) onCSVCMsg_PacketEntities(m *dota.CSVCMsg_PacketEntities) error 
 		tuples = append(tuples, tuple{e, op})
 	}
 
+/*
 	for _, h := range p.entityHandlers {
 		for _, t := range tuples {
 			if err := h(t.e, t.op); err != nil {
@@ -140,6 +134,7 @@ func (p *Parser) onCSVCMsg_PacketEntities(m *dota.CSVCMsg_PacketEntities) error 
 			}
 		}
 	}
+*/
 
 	return nil
 }

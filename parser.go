@@ -42,7 +42,6 @@ type Parser struct {
 	classInfo                  bool
 	entities                   map[int32]*Entity
 	entityFullPackets          int
-	entityHandlers             []EntityHandler
 	gameEventHandlers          map[string][]GameEventHandler
 	gameEventNames             map[int32]string
 	gameEventTypes             map[string]*gameEventType
@@ -73,7 +72,6 @@ func NewStreamParser(r io.Reader) (*Parser, error) {
 		classesById:       make(map[int32]*class),
 		classesByName:     make(map[string]*class),
 		entities:          make(map[int32]*Entity),
-		entityHandlers:    make([]EntityHandler, 0),
 		gameEventHandlers: make(map[string][]GameEventHandler),
 		gameEventNames:    make(map[int32]string),
 		gameEventTypes:    make(map[string]*gameEventType),
