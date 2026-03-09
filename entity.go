@@ -222,17 +222,51 @@ func readFields(r *reader, s *serializer, state *fieldState) {
 	}
 }
 
+
 // ------------------------------------------------------------------------- //
 // field_path
 // ------------------------------------------------------------------------- //
 
-
 var huffTree = newHuffmanTree()
 
-type fieldPath struct {
-	path []int
-	last int
-	done bool
+// readFieldPaths reads a new slice of fieldPath values from the given reader
+func readFieldPaths(r *reader) []*fieldPath {
+	fp := newFieldPath()
+
+	node, next := huffTree, huffTree
+
+	paths := []*fieldPath{}
+
+	for !fp.done {
+		if r.readBits(1) == 1 {
+			next = node.Right()
+		} else {
+			next = node.Left()
+		}
+
+		if next.IsLeaf() {
+			node = huffTree
+			fieldPathTable[next.Value()].fn(r, fp)
+			if !fp.done {
+				paths = append(paths, fp.copy())
+			}
+		} else {
+			node = next
+		}
+	}
+
+	fp.release()
+
+	return paths
+}
+
+// newHuffmanTree creates a new huffmanTree from the field path table
+func newHuffmanTree() huffmanTree {
+	freqs := make([]int, len(fieldPathTable))
+	for i, op := range fieldPathTable {
+		freqs[i] = op.weight
+	}
+	return buildHuffmanTree(freqs)
 }
 
 type fieldPathOp struct {
@@ -526,45 +560,6 @@ func (fp *fieldPath) release() {
 	fpPool.Put(fp)
 }
 
-// readFieldPaths reads a new slice of fieldPath values from the given reader
-func readFieldPaths(r *reader) []*fieldPath {
-	fp := newFieldPath()
-
-	node, next := huffTree, huffTree
-
-	paths := []*fieldPath{}
-
-	for !fp.done {
-		if r.readBits(1) == 1 {
-			next = node.Right()
-		} else {
-			next = node.Left()
-		}
-
-		if next.IsLeaf() {
-			node = huffTree
-			fieldPathTable[next.Value()].fn(r, fp)
-			if !fp.done {
-				paths = append(paths, fp.copy())
-			}
-		} else {
-			node = next
-		}
-	}
-
-	fp.release()
-
-	return paths
-}
-
-// newHuffmanTree creates a new huffmanTree from the field path table
-func newHuffmanTree() huffmanTree {
-	freqs := make([]int, len(fieldPathTable))
-	for i, op := range fieldPathTable {
-		freqs[i] = op.weight
-	}
-	return buildHuffmanTree(freqs)
-}
 
 // ------------------------------------------------------------------------- //
 // huffman

@@ -204,6 +204,58 @@ func (f *field) setModel(model int) {
 	}
 }
 
+
+// ------------------------------------------------------------------------- //
+// serializer
+// ------------------------------------------------------------------------- //
+
+type serializer struct {
+	name    string
+	version int32
+	fields  []*field
+}
+
+
+func (s *serializer) getNameForFieldPathSer(fp *fieldPath, pos int) []string {
+	return s.fields[fp.path[pos]].getNameForFieldPathField(fp, pos+1)
+}
+
+func (s *serializer) getDecoderForFieldPathSer(fp *fieldPath, pos int) fieldDecoder {
+	index := fp.path[pos]
+	if len(s.fields) <= index {
+		_panicf("serializer %s: field path %s has no field (%d)", s.name, fp, index)
+	}
+	return s.fields[index].getDecoderForFieldPathField(fp, pos+1)
+}
+
+func (s *serializer) getFieldPathForNameSer(fp *fieldPath, name string) bool {
+	for i, f := range s.fields {
+		if name == f.varName {
+			fp.path[fp.last] = i
+			return true
+		}
+
+		if strings.HasPrefix(name, f.varName+".") {
+			fp.path[fp.last] = i
+			fp.last++
+			return f.getFieldPathForNameField(fp, name[len(f.varName)+1:])
+		}
+	}
+
+	return false
+}
+
+
+// ------------------------------------------------------------------------- //
+// field_path
+// ------------------------------------------------------------------------- //
+
+type fieldPath struct {
+	path []int
+	last int
+	done bool
+}
+
 func (f *field) getNameForFieldPathField(fp *fieldPath, pos int) []string {
 	x := []string{f.varName}
 
@@ -309,47 +361,6 @@ func assertLenMin(s string, n int) {
 	if len(s) < n {
 		_panicf("assertion failed: '%s' is less than %d long", s, n)
 	}
-}
-
-
-// ------------------------------------------------------------------------- //
-// serializer
-// ------------------------------------------------------------------------- //
-
-type serializer struct {
-	name    string
-	version int32
-	fields  []*field
-}
-
-
-func (s *serializer) getNameForFieldPathSer(fp *fieldPath, pos int) []string {
-	return s.fields[fp.path[pos]].getNameForFieldPathField(fp, pos+1)
-}
-
-func (s *serializer) getDecoderForFieldPathSer(fp *fieldPath, pos int) fieldDecoder {
-	index := fp.path[pos]
-	if len(s.fields) <= index {
-		_panicf("serializer %s: field path %s has no field (%d)", s.name, fp, index)
-	}
-	return s.fields[index].getDecoderForFieldPathField(fp, pos+1)
-}
-
-func (s *serializer) getFieldPathForNameSer(fp *fieldPath, name string) bool {
-	for i, f := range s.fields {
-		if name == f.varName {
-			fp.path[fp.last] = i
-			return true
-		}
-
-		if strings.HasPrefix(name, f.varName+".") {
-			fp.path[fp.last] = i
-			fp.last++
-			return f.getFieldPathForNameField(fp, name[len(f.varName)+1:])
-		}
-	}
-
-	return false
 }
 
 
