@@ -567,7 +567,7 @@ func newHuffmanTree() huffmanTree {
 }
 
 // ------------------------------------------------------------------------- //
-// Huffman tree
+// huffman
 // ------------------------------------------------------------------------- //
 
 // Interface for the tree, only implements Weight
