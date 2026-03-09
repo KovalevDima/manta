@@ -144,7 +144,7 @@ func (p *Parser) onCSVCMsg_PacketEntities(m *dota.CSVCMsg_PacketEntities) error 
 
 
 // ------------------------------------------------------------------------- //
-// Field state
+// field_state
 // ------------------------------------------------------------------------- //
 
 type fieldState struct {
