@@ -2014,10 +2014,6 @@ func (c *Callbacks) callByDemoType(t int32, buf []byte) error {
 
 	}
 
-	if v(1) {
-		_debugf("warning: no demo type %d found", t)
-	}
-
 	return nil
 }
 

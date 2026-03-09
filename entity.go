@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"sync"
 	"container/heap"
+	"fmt"
 
 	"github.com/dotabuff/manta/dota"
 )
@@ -82,12 +83,12 @@ func (p *Parser) onCSVCMsg_PacketEntities(m *dota.CSVCMsg_PacketEntities) error 
 
 				class := p.classesById[classId]
 				if class == nil {
-					_panicf("unable to find new class %d", classId)
+					panic(fmt.Errorf("unable to find new class %d", classId))
 				}
 
 				baseline := p.classBaselines[classId]
 				if baseline == nil {
-					_panicf("unable to find new baseline %d", classId)
+					panic(fmt.Errorf("unable to find new baseline %d", classId))
 				}
 
 				e = newEntity(index, serial, class)
@@ -98,7 +99,7 @@ func (p *Parser) onCSVCMsg_PacketEntities(m *dota.CSVCMsg_PacketEntities) error 
 
 			} else {
 				if e = p.entities[index]; e == nil {
-					_panicf("unable to find existing entity %d", index)
+					panic(fmt.Errorf("unable to find existing entity %d", index))
 				}
 
 				op = EntityOpUpdated
@@ -112,11 +113,11 @@ func (p *Parser) onCSVCMsg_PacketEntities(m *dota.CSVCMsg_PacketEntities) error 
 
 		} else {
 			if e = p.entities[index]; e == nil {
-				_panicf("unable to find existing entity %d", index)
+				panic(fmt.Errorf("unable to find existing entity %d", index))
 			}
 
 			if !e.active {
-				_panicf("entity %d (%s) ordered to leave, already inactive", e.class.classId, e.class.name)
+				panic(fmt.Errorf("entity %d (%s) ordered to leave, already inactive", e.class.classId, e.class.name))
 			}
 
 			op = EntityOpLeft
@@ -199,24 +200,6 @@ func readFields(r *reader, s *serializer, state *fieldState) {
 
 		val := decoder(r)
 		state.set(fp, val)
-
-		if v(6) {
-			name := strings.Join(s.getNameForFieldPathSer(fp, 0), ".")
-			fp2 := newFieldPath()
-			b := s.getFieldPathForNameSer(fp2, name)
-
-			if !b {
-				_panicf("GOT NO FP: name=%s fp2=%#vv", name, fp2)
-			}
-
-			if fp2.String() != fp.String() {
-				_panicf("GOT FP MISMATCH: fp=%s fp2=%s", fp, fp2)
-			}
-
-			fp2.release()
-
-			_debugf(" => %#v", val)
-		}
 
 		fp.release()
 	}
@@ -604,12 +587,12 @@ func (self huffmanLeaf) Value() int {
 }
 
 func (self huffmanLeaf) Right() huffmanTree {
-	_panicf("huffmanLeaf doesn't have right node")
+	panic(fmt.Errorf("huffmanLeaf doesn't have right node"))
 	return nil
 }
 
 func (self huffmanLeaf) Left() huffmanTree {
-	_panicf("huffmanLeaf doesn't have left node")
+	panic(fmt.Errorf("huffmanLeaf doesn't have left node"))
 	return nil
 }
 

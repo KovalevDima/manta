@@ -191,7 +191,7 @@ func (f *field) setModel(model int) {
 
 	case fieldModelVariableArray:
 		if f.fieldType.genericType == nil {
-			_panicf("no generic type for variable array field %#v", f)
+			panic(fmt.Errorf("no generic type for variable array field %#v", f))
 		}
 		f.baseDecoder = unsignedDecoder
 		f.childDecoder = findDecoderByBaseType(f.fieldType.genericType.baseType)
@@ -223,7 +223,7 @@ func (s *serializer) getNameForFieldPathSer(fp *fieldPath, pos int) []string {
 func (s *serializer) getDecoderForFieldPathSer(fp *fieldPath, pos int) fieldDecoder {
 	index := fp.path[pos]
 	if len(s.fields) <= index {
-		_panicf("serializer %s: field path %s has no field (%d)", s.name, fp, index)
+		panic(fmt.Errorf("serializer %s: field path %s has no field (%d)", s.name, fp, index))
 	}
 	return s.fields[index].getDecoderForFieldPathField(fp, pos+1)
 }
@@ -336,7 +336,7 @@ func (f *field) getFieldPathForNameField(fp *fieldPath, name string) bool {
 		return f.serializer.getFieldPathForNameSer(fp, name[5:])
 
 	case fieldModelSimple:
-		_panicf("not supported")
+		panic(fmt.Errorf("not supported"))
 	}
 
 	return false
@@ -346,20 +346,20 @@ func (f *field) getFieldPathForNameField(fp *fieldPath, name string) bool {
 func mustAtoi(s string) int {
 	n, err := strconv.Atoi(s)
 	if err != nil {
-		_panicf("assertion failed: '%s' not a number", s)
+		panic(fmt.Errorf("assertion failed: '%s' not a number", s))
 	}
 	return n
 }
 
 func assertLen(s string, n int) {
 	if len(s) != n {
-		_panicf("assertion failed: '%s' is not %d long", s, n)
+		panic(fmt.Errorf("assertion failed: '%s' is not %d long", s, n))
 	}
 }
 
 func assertLenMin(s string, n int) {
 	if len(s) < n {
-		_panicf("assertion failed: '%s' is less than %d long", s, n)
+		panic(fmt.Errorf("assertion failed: '%s' is less than %d long", s, n))
 	}
 }
 
@@ -696,8 +696,8 @@ func componentDecoder(r *reader) interface{} {
 }
 
 func findDecoder(f *field) fieldDecoder {
-	if v, ok := fieldTypeFactories[f.fieldType.baseType]; ok {
-		return v(f)
+	if dec, ok := fieldTypeFactories[f.fieldType.baseType]; ok {
+		return dec(f)
 	}
 
 	if v, ok := fieldNameDecoders[f.varName]; ok {
@@ -777,7 +777,7 @@ func (qfd *quantizedFloatDecoder) validateFlags() {
 
 	// Verify that we don;t have roundup / rounddown set
 	if qfd.Flags&(qff_rounddown|qff_roundup) == (qff_rounddown | qff_roundup) {
-		_panicf("Roundup / Rounddown are mutually exclusive")
+		panic(fmt.Errorf("Roundup / Rounddown are mutually exclusive"))
 	}
 }
 
@@ -819,7 +819,7 @@ func (qfd *quantizedFloatDecoder) assignMultipliers(steps uint32) {
 	qfd.DecMul = 1.0 / float32(steps-1)
 
 	if qfd.HighLowMul == 0.0 {
-		_panicf("Error computing high / low multiplier")
+		panic(fmt.Errorf("Error computing high / low multiplier"))
 	}
 }
 
@@ -827,13 +827,13 @@ func (qfd *quantizedFloatDecoder) assignMultipliers(steps uint32) {
 func (qfd *quantizedFloatDecoder) quantize(val float32) float32 {
 	if val < qfd.Low {
 		if (qfd.Flags & qff_roundup) == 0 {
-			_panicf("Field tried to quantize an out of range value")
+			panic(fmt.Errorf("Field tried to quantize an out of range value"))
 		}
 
 		return qfd.Low
 	} else if val > qfd.High {
 		if (qfd.Flags & qff_rounddown) == 0 {
-			_panicf("Field tried to quantize an out of range value")
+			panic(fmt.Errorf("Field tried to quantize an out of range value"))
 		}
 
 		return qfd.High

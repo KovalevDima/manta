@@ -87,7 +87,7 @@ func NewStreamParser(r io.Reader) (*Parser, error) {
 		return nil, err
 	}
 	if !bytes.Equal(magic, magicSource2) {
-		return nil, _errorf("unexpected magic: expected %s, got %s", magicSource2, magic)
+		return nil, fmt.Errorf("unexpected magic: expected %s, got %s", magicSource2, magic)
 	}
 
 	// Skip the next 8 bytes, which appear to be two int32s related to the size
@@ -396,9 +396,6 @@ func (p *Parser) updateInstanceBaseline() {
 
 	stringTable, ok := p.stringTables.GetTableByName("instancebaseline")
 	if !ok {
-		if v(1) {
-			_debugf("skipping updateInstanceBaseline: no instancebaseline string table")
-		}
 		return
 	}
 
@@ -406,7 +403,7 @@ func (p *Parser) updateInstanceBaseline() {
 	for _, item := range stringTable.Items {
 		classId, err := atoi32(item.Key)
 		if err != nil {
-			_panicf("invalid instancebaseline key '%s': %s", item.Key, err)
+			panic(fmt.Errorf("invalid instancebaseline key '%s': %s", item.Key, err))
 		}
 		p.classBaselines[classId] = item.Value
 	}
@@ -567,7 +564,7 @@ func (p *Parser) onCMsgSource1LegacyGameEvent(m *dota.CMsgSource1LegacyGameEvent
 	// Look up the handler name by event id.
 	name, ok := p.gameEventNames[m.GetEventid()]
 	if !ok {
-		return _errorf("unknown event id: %d", m.GetEventid())
+		return fmt.Errorf("unknown event id: %d", m.GetEventid())
 	}
 
 	// Get the handlers for the event name. Return early if none.
@@ -579,7 +576,7 @@ func (p *Parser) onCMsgSource1LegacyGameEvent(m *dota.CMsgSource1LegacyGameEvent
 	// Get the type for the event.
 	t, ok := p.gameEventTypes[name]
 	if !ok {
-		return _errorf("unknown event type: %s", name)
+		return fmt.Errorf("unknown event type: %s", name)
 	}
 
 	// Create a GameEvent, offer to all handlers.

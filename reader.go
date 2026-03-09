@@ -41,7 +41,7 @@ func (r *reader) remBytes() uint32 {
 func (r *reader) nextByte() byte {
 	r.pos += 1
 	if r.pos > r.size {
-		_panicf("nextByte: insufficient buffer (%d of %d)", r.pos, r.size)
+		panic(fmt.Errorf("nextByte: insufficient buffer (%d of %d)", r.pos, r.size))
 	}
 	return r.buf[r.pos-1]
 }
@@ -76,7 +76,7 @@ func (r *reader) readBytes(n uint32) []byte {
 	if r.bitCount == 0 {
 		r.pos += n
 		if r.pos > r.size {
-			_panicf("readBytes: insufficient buffer (%d of %d)", r.pos, r.size)
+			panic(fmt.Errorf("readBytes: insufficient buffer (%d of %d)", r.pos, r.size))
 		}
 		return r.buf[r.pos-n : r.pos]
 	}
@@ -130,7 +130,7 @@ func (r *reader) readVarUint64() uint64 {
 		b := r.readByte()
 		if b < 0x80 {
 			if i > 9 || i == 9 && b > 1 {
-				_panicf("read overflow: varint overflows uint64")
+				panic(fmt.Errorf("read overflow: varint overflows uint64"))
 			}
 			return x | uint64(b)<<s
 		}

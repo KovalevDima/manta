@@ -4,6 +4,7 @@ import (
 	"github.com/dotabuff/manta/dota"
 	"github.com/golang/snappy"
 	"github.com/golang/protobuf/proto"
+	"fmt"
 )
 
 const (
@@ -137,11 +138,7 @@ func (p *Parser) onCSVCMsg_UpdateStringTable(m *dota.CSVCMsg_UpdateStringTable) 
 	// TODO: integrate
 	t, ok := p.stringTables.Tables[m.GetTableId()]
 	if !ok {
-		_panicf("missing string table %d", m.GetTableId())
-	}
-
-	if v(5) {
-		_debugf("tick=%d name=%s changedEntries=%d size=%d", p.Tick, t.name, m.GetNumChangedEntries(), len(m.GetStringData()))
+		panic(fmt.Errorf("missing string table %d", m.GetTableId()))
 	}
 
 	// Parse the updates out of the string table data
@@ -181,7 +178,7 @@ func (p *Parser) onCSVCMsg_UpdateStringTable(m *dota.CSVCMsg_UpdateStringTable) 
 func parseStringTable(buf []byte, numUpdates int32, name string, userDataFixed bool, userDataSizeBits int32, flags int32, varintBitCounts bool) (items []*stringTableItem) {
 	defer func() {
 		if err := recover(); err != nil {
-			_debugf("warning: unable to parse string table %s: %s", name, err)
+			// unable to parse string table
 			return
 		}
 	}()
@@ -284,7 +281,7 @@ func parseStringTable(buf []byte, numUpdates int32, name string, userDataFixed b
 			if isCompressed {
 				tmp, err := snappy.Decode(nil, value)
 				if err != nil {
-					_panicf("unable to decode snappy compressed stringtable item (%s, %d, %s): %s", name, index, key, err)
+					panic(fmt.Errorf("unable to decode snappy compressed stringtable item (%s, %d, %s): %s", name, index, key, err))
 				}
 				value = tmp
 			}
@@ -314,7 +311,7 @@ func (p *Parser) emitModifierTableEvents(items []*stringTableItem) error {
 	for _, item := range items {
 		msg := &dota.CDOTAModifierBuffTableEntry{}
 		if err := proto.NewBuffer(item.Value).Unmarshal(msg); err != nil {
-			_debugf("unable to unmarshal ModifierBuffTableEntry: %s", err)
+			// "unable to unmarshal ModifierBuffTableEntry"
 			continue
 		}
 
@@ -337,7 +334,7 @@ func unlzss(buf []byte) ([]byte, error) {
 	r := newReader(buf)
 
 	if s := r.readStringN(4); s != "LZSS" {
-		return nil, _errorf("expected LZSS header, got %s", s)
+		return nil, fmt.Errorf("expected LZSS header, got %s", s)
 	}
 
 	size := int(r.readLeUint32())
@@ -372,7 +369,7 @@ func unlzss(buf []byte) ([]byte, error) {
 	}
 
 	if len(out) != size {
-		return nil, _errorf("expected %d bytes, got %d", size, len(out))
+		return nil, fmt.Errorf("expected %d bytes, got %d", size, len(out))
 	}
 
 	return out, nil
