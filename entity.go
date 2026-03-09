@@ -188,7 +188,7 @@ func max(a, b int) int {
 }
 
 // ------------------------------------------------------------------------- //
-// Fields reader
+// field_reader
 // ------------------------------------------------------------------------- //
 
 func readFields(r *reader, s *serializer, state *fieldState) {
