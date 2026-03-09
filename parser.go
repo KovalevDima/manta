@@ -347,12 +347,6 @@ func (p *Parser) onCDemoFullPacket(m *dota.CDemoFullPacket) error {
 
 var gameBuildRegexp = regexp.MustCompile(`/dota_v(\d+)/`)
 
-type class struct {
-	classId    int32
-	name       string
-	serializer *serializer
-}
-
 // Internal callback for OnCSVCMsg_ServerInfo.
 func (p *Parser) onCSVCMsg_ServerInfo(m *dota.CSVCMsg_ServerInfo) error {
 	// This may be needed to parse PacketEntities.
