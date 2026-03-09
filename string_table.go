@@ -297,7 +297,7 @@ func parseStringTable(buf []byte, numUpdates int32, name string, userDataFixed b
 }
 
 // ------------------------------------------------------------------------- //
-// Modifier
+// modifier
 // ------------------------------------------------------------------------- //
 
 type ModifierTableEntryHandler func(msg *dota.CDOTAModifierBuffTableEntry) error
