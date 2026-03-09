@@ -342,7 +342,7 @@ func (p *Parser) onCDemoFullPacket(m *dota.CDemoFullPacket) error {
 
 
 // ------------------------------------------------------------------------- //
-// 
+// class
 // ------------------------------------------------------------------------- //
 
 var gameBuildRegexp = regexp.MustCompile(`/dota_v(\d+)/`)
