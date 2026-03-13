@@ -1,8 +1,6 @@
 package manta
 
 import (
-	"strings"
-	"strconv"
 	"sync"
 	"container/heap"
 	"fmt"
@@ -501,15 +499,6 @@ func (fp *fieldPath) copy() *fieldPath {
 	x.last = fp.last
 	x.done = fp.done
 	return x
-}
-
-// String returns a string representing the fieldPath
-func (fp *fieldPath) String() string {
-	ss := make([]string, fp.last+1)
-	for i := 0; i <= fp.last; i++ {
-		ss[i] = strconv.Itoa(fp.path[i])
-	}
-	return strings.Join(ss, "/")
 }
 
 // newFieldPath returns a new fieldPath ready for use
