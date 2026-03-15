@@ -8,6 +8,10 @@ import (
 	"github.com/dotabuff/manta/dota"
 )
 
+// ------------------------------------------------------------------------- //
+//  * entity
+// ------------------------------------------------------------------------- //
+
 // EntityOp is a bitmask representing the type of operation performed on an Entity
 type EntityOp int
 
